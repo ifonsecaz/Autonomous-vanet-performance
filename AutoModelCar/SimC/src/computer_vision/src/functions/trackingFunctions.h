@@ -27,6 +27,10 @@
 
 #include "globals.h"
 
+void savePredictionImage(Mat* img, int cont);
+
+void publishPredictedImage(Mat* imgDet);
+
 /**
 +  * @brief Performs Kalman filter-based tracking.
 +  * 
@@ -63,8 +67,6 @@ void preparacionKalman(
     KalmanFilter* kalman
 );
 
-void savePredictionImage(Mat* img, int cont);
 
-void publishPredictedImage(Mat* imgDet);
 
 #endif // TRACKINGFUNCTIONS_H

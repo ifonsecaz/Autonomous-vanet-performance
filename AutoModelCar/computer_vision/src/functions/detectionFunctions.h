@@ -27,6 +27,17 @@
 
 #include "globals.h"
 
+void saveDetectionImage(Mat* img, int cont);
+
+void publishDetectionImage(Mat* imgDet);
+
+float predictWithSVM(
+    Ptr<SVM>* svm, 
+    Ptr<SVM>* svm2,
+    HOGDescriptor* hog, 
+    Mat* imgRec
+);
+
 void detecVentana(
     Ptr<SVM>* svm, 
     Ptr<SVM>* svm2,
@@ -39,13 +50,6 @@ void detecVentana(
     vector<Rect>* detections
 );
 
-float predictWithSVM(
-    Ptr<SVM>* svm, 
-    Ptr<SVM>* svm2,
-    HOGDescriptor* hog, 
-    Mat* imgRec
-);
-
 void detecRegion(
     CascadeClassifier* carC, 
     Mat* img, 
@@ -55,9 +59,5 @@ void detecRegion(
     bool* encontro, 
     Rect* detections
 );
-
-void saveDetectionImage(Mat* img, int cont);
-
-void publishDetectionImage(Mat* imgDet);
 
 #endif // DETECTIONFUNCTIONS_H

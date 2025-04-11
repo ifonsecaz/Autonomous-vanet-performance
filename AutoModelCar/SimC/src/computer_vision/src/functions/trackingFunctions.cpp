@@ -1,5 +1,25 @@
 #include "trackingFunctions.h"
 
+void savePredictionImage(Mat* img, int cont){
+    String b = "/home/israel/Documents/k/kalman/res" + std::to_string(cont) + ".jpg";
+
+    imwrite(b, *img);
+}
+
+void publishPredictedImage(Mat* img){
+	ros::NodeHandle nh("~");
+    //     /pred Nombre del tópico con el que se publica la imagen con la predicción
+    detec_publisherk = nh.advertise<sensor_msgs::Image>("/pred",1);
+
+    sensor_msgs::Image img_msg;
+    std_msgs::Header header; 
+    //header.seq = counter; 
+    header.stamp = ros::Time::now(); 
+    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::TYPE_8UC1, *img);
+    img_bridge.toImageMsg(img_msg); 
+    detec_publisherk.publish(img_msg);  
+}
+
 /*
 Filtro de kalman
 Realiza la predicción y corrección en caso de que hubiera detecciones, hace la actualización
@@ -160,22 +180,3 @@ void preparacionKalman(Rect* detections, KalmanFilter* kalman) {
 
 }
 
-void savePredictionImage(Mat* img, int cont){
-    String b = "/home/israel/Documents/k/kalman/res" + std::to_string(cont) + ".jpg";
-
-    imwrite(b, *img);
-}
-
-void publishPredictedImage(Mat* img){
-	ros::NodeHandle nh("~");
-    //     /pred Nombre del tópico con el que se publica la imagen con la predicción
-    detec_publisherk = nh.advertise<sensor_msgs::Image>("/pred",1);
-
-    sensor_msgs::Image img_msg;
-    std_msgs::Header header; 
-    //header.seq = counter; 
-    header.stamp = ros::Time::now(); 
-    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::TYPE_8UC1, *img);
-    img_bridge.toImageMsg(img_msg); 
-    detec_publisherk.publish(img_msg);  
-}

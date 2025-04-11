@@ -1,5 +1,57 @@
 #include "detectionFunctions.h"
 
+void saveDetectionImage(Mat* imgDet, int cont){
+    String a = "/home/israel/Documents/k/test" + std::to_string(cont) + ".jpg";
+
+    imwrite(a, *imgDet);
+}
+
+void publishDetectionImage(Mat* imgDet){
+    ros::NodeHandle nh("~");
+    //     /detec es el nombre del tópico para las detecciones, publica un mensaje del tipo sensor_msgs: Image
+    detec_publisher = nh.advertise<sensor_msgs::Image>("/detec",1);
+
+	//Se convierte la imagen a sensor_msgs y se publica
+	sensor_msgs::Image img_msg;
+    std_msgs::Header header; 
+    //header.seq = counter; 
+    header.stamp = ros::Time::now(); 
+    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::TYPE_8UC1, *imgDet);
+    img_bridge.toImageMsg(img_msg); 
+    detec_publisher.publish(img_msg); 
+}
+
+/*
+Método que realiza la prediccion con SVM para mejorar los resultados de detección
+Recibe las máquinas de soporte vectorial y la imagen cortada
+Devuelve el resultado flotante
+*/
+float predictWithSVM(Ptr<SVM>* svm, Ptr<SVM>* svm2,HOGDescriptor* hog, Mat* imgRec){
+    Mat imgSVM;
+    //Para la predicción, la imagen debe ser de 64x64
+    resize(*imgRec, imgSVM, Size(64, 64), 0, 0, cv::INTER_AREA);
+
+    //Se aplica un filtro gaussiano, igual se puede probar con motionblur, se da el formato correcto y se extraen sus características
+    //GaussianBlur(imgSVM, imgSVMBLUR, Size(5, 5), 0);
+    vector< float > descriptorsSVM;
+
+    hog->compute(imgSVM, descriptorsSVM, Size(0, 0), Size(0, 0));
+    
+    //Se realiza la predicción con SVM
+    //Se debe cambiar para usar solo una máquina 
+    float result1 = (*svm)->predict(descriptorsSVM);
+    float result;
+    if (result1 < 0) { //OR
+        result = (*svm2)->predict(descriptorsSVM);
+    }
+    else {
+        result = result1;
+    }
+    
+    cout << "\n result " << result;
+    return result;
+}
+
 /*
 Método que realiza la deteccion sobre la imagen completa
 Recibe las máquinas de soporte vectorial y el filtro de cascada, el frame actual y el número del frame
@@ -92,36 +144,6 @@ void detecVentana(Ptr<SVM>* svm, Ptr<SVM>* svm2,HOGDescriptor* hog,CascadeClassi
     publishDetectionImage(&imgDet);
 }
 
-/*
-Método que realiza la prediccion con SVM para mejorar los resultados de detección
-Recibe las máquinas de soporte vectorial y la imagen cortada
-Devuelve el resultado flotante
-*/
-float predictWithSVM(Ptr<SVM>* svm, Ptr<SVM>* svm2,HOGDescriptor* hog, Mat* imgRec){
-    Mat imgSVM;
-    //Para la predicción, la imagen debe ser de 64x64
-    resize(*imgRec, imgSVM, Size(64, 64), 0, 0, cv::INTER_AREA);
-
-    //Se aplica un filtro gaussiano, igual se puede probar con motionblur, se da el formato correcto y se extraen sus características
-    //GaussianBlur(imgSVM, imgSVMBLUR, Size(5, 5), 0);
-    vector< float > descriptorsSVM;
-
-    hog->compute(imgSVM, descriptorsSVM, Size(0, 0), Size(0, 0));
-    
-    //Se realiza la predicción con SVM
-    //Se debe cambiar para usar solo una máquina 
-    float result1 = (*svm)->predict(descriptorsSVM);
-    float result;
-    if (result1 < 0) { //OR
-        result = (*svm2)->predict(descriptorsSVM);
-    }
-    else {
-        result = result1;
-    }
-    
-    cout << "\n result " << result;
-    return result;
-}
 
 /*
 Método para realizar detecciones sobre una región, la cual es predicha por kalman
@@ -237,23 +259,3 @@ void detecRegion(CascadeClassifier* carC, Mat* img, int cont, Rect predRect, Mat
     saveDetectionImage(&imgDET,cont);
 }
 
-void saveDetectionImage(Mat* imgDet, int cont){
-    String a = "/home/israel/Documents/k/test" + std::to_string(cont) + ".jpg";
-
-    imwrite(a, *imgDet);
-}
-
-void publishDetectionImage(Mat* imgDet){
-    ros::NodeHandle nh("~");
-    //     /detec es el nombre del tópico para las detecciones, publica un mensaje del tipo sensor_msgs: Image
-    detec_publisher = nh.advertise<sensor_msgs::Image>("/detec",1);
-
-	//Se convierte la imagen a sensor_msgs y se publica
-	sensor_msgs::Image img_msg;
-    std_msgs::Header header; 
-    //header.seq = counter; 
-    header.stamp = ros::Time::now(); 
-    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::TYPE_8UC1, *imgDet);
-    img_bridge.toImageMsg(img_msg); 
-    detec_publisher.publish(img_msg); 
-}
