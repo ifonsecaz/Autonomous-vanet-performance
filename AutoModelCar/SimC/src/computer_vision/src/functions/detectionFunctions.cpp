@@ -110,10 +110,10 @@ float predictWithSVM(Ptr<SVM>* svm, Ptr<SVM>* svm2,HOGDescriptor* hog, Mat* imgR
     
     //Se realiza la predicción con SVM
     //Se debe cambiar para usar solo una máquina 
-    float result1 = svm->predict(descriptorsSVM);
+    float result1 = (*svm)->predict(descriptorsSVM);
     float result;
     if (result1 < 0) { //OR
-        result = svm2->predict(descriptorsSVM);
+        result = (*svm2)->predict(descriptorsSVM);
     }
     else {
         result = result1;

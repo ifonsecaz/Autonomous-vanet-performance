@@ -34,21 +34,7 @@ using namespace std;
 
 cv::Mat img= Mat(ROI, 640, CV_64F, 0.0);
 
-//---Hog descriptor configuration---//
-//Se prepara el descriptor HOG con los mismos parámetros con los que se entronaron las SVM
 HOGDescriptor hog;
-hog.winSize = Size(64, 64);
-hog.blockSize = Size(16, 16); //
-hog.cellSize = Size(4, 4);
-hog.blockStride = Size(4, 4);
-hog.nbins = 9;
-hog.derivAperture = 1;
-hog.winSigma = 4;
-//hog.histogramNormType = 0;
-hog.L2HysThreshold = 2.0000000000000001e-01;
-hog.gammaCorrection = 1;
-hog.nlevels = 64;
-hog.signedGradient = 0;
 
 //Classifiers
 Ptr<SVM> svm;
@@ -57,6 +43,23 @@ CascadeClassifier carC;
 
 //publicador
 ros::Publisher detecciones;
+
+//---Hog descriptor configuration---//
+//Se prepara el descriptor HOG con los mismos parámetros con los que se entronaron las SVM
+void LoadHOGDescriptor() {
+    hog.winSize = Size(64, 64);
+    hog.blockSize = Size(16, 16);
+    hog.cellSize = Size(4, 4);
+    hog.blockStride = Size(4, 4);
+    hog.nbins = 9;
+    hog.derivAperture = 1;
+    hog.winSigma = 4;
+    //hog.histogramNormType = 0;
+    hog.L2HysThreshold = 2.0000000000000001e-01;
+    hog.gammaCorrection = 1;
+    hog.nlevels = 64;
+    hog.signedGradient = 0;
+}
 
 //Recibe la imagen de la cámara y la convierta a tipo MAT con cv_bridge, ya recorta la altura y se pasa a escala de grises
 void camaraRGBCallback(const sensor_msgs::Image& msg)
@@ -342,6 +345,8 @@ int main(int argc, char** argv)
     end = std::chrono::steady_clock::now();
 
     std::cout << "\nCargar cascada: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+
+    LoadHOGDescriptor();
 
 	std::chrono::steady_clock::time_point lastPrediction;
     std::chrono::steady_clock::time_point PrediccionActual;

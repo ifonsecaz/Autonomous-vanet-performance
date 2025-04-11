@@ -3,7 +3,7 @@
 #include "opencv2/ml.hpp"
 #include "opencv2/objdetect.hpp"
 #include "opencv2/videoio.hpp"
-#include "C:\Users\ifons\source\repos\validacion2\validacion2\HOGImage-master/HOGImage/HOGImage.hpp"
+#include "D:\ifons\source\repos\validacion2\validacion2\HOGImage-master/HOGImage/HOGImage.hpp"
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/cuda.hpp"
 #include <iostream>
@@ -13,6 +13,22 @@ using namespace cv::ml;
 using namespace std;
 //using namespace cuda;
 
+HOGDescriptor hog;
+
+void createHOGDescriptor() {
+    hog.winSize = Size(64, 64);
+    hog.blockSize = Size(16, 16);
+    hog.cellSize = Size(4, 4);
+    hog.blockStride = Size(4, 4);
+    hog.nbins = 9;
+    hog.derivAperture = 1;
+    hog.winSigma = 4;
+    //hog.histogramNormType = 0;
+    hog.L2HysThreshold = 2.0000000000000001e-01;
+    hog.gammaCorrection = 1;
+    hog.nlevels = 64;
+    hog.signedGradient = 0;
+}
 
 void convert_to_ml(const vector< Mat >& train_samples, Mat& trainData)
 {
@@ -38,20 +54,6 @@ void convert_to_ml(const vector< Mat >& train_samples, Mat& trainData)
 
 void computeHOGs(const vector< Mat >& img_lst, vector< Mat >& gradient_lst)
 {
-    HOGDescriptor hog;
-    hog.winSize = Size(64, 64);
-    hog.blockSize = Size(16, 16);
-    hog.blockStride = Size(4, 4); //Size(0,0)
-    hog.cellSize = Size(4, 4);
-    hog.nbins = 9;
-    hog.derivAperture = 1;
-    hog.winSigma = -1;
-    //hog.histogramNormType = ;Usa L2Hys por defecto
-    hog.L2HysThreshold = 0.2;
-    hog.gammaCorrection = 1;
-    hog.nlevels = 64;
-    hog.signedGradient = false;
-
     Mat gray;
     vector< float > descriptors;
     std::cout << "\n" << img_lst.size() << "\n";
@@ -106,7 +108,6 @@ void load_images(const String& dirname, vector< Mat >& img_lst, bool gaussian, b
         resize(imgAux, img2, Size(64, 64), 0, 0, cv::INTER_AREA);
 
         //img2.convertTo(img2, CV_8UC3);
-
         img_lst.push_back(img2);
     }
 }
@@ -114,10 +115,6 @@ void load_images(const String& dirname, vector< Mat >& img_lst, bool gaussian, b
 void test_trained_detectorIm(Ptr<SVM> svm, String directorio, vector<int>* res, int* total, int cut)
 {
     std::vector<int> cont(2, 0);
-    double max = -1;
-    double min = 1;
-    int limI;
-    int limS;
     Mat img0, img1, img2;
     vector< String > files;
 
@@ -128,21 +125,6 @@ void test_trained_detectorIm(Ptr<SVM> svm, String directorio, vector<int>* res, 
     for (size_t i = 0; i < files.size(); ++i)
     {
         Mat img = imread(files[i]); // load the image
-
-        HOGDescriptor hog;
-        hog.winSize = Size(64, 64);
-        hog.blockSize = Size(16, 16);
-        hog.cellSize = Size(4, 4);
-        hog.blockStride = Size(4, 4);
-        hog.nbins = 9;
-        hog.derivAperture = 1;
-        hog.winSigma = 4;
-        //hog.histogramNormType = 0;
-        hog.L2HysThreshold = 2.0000000000000001e-01;
-        hog.gammaCorrection = 1;
-        hog.nlevels = 64;
-        hog.signedGradient = 0;
-
 
         resize(img, img0, Size(64, 64), 0, 0, cv::INTER_AREA);
         if (cut == 0) {
@@ -160,52 +142,32 @@ void test_trained_detectorIm(Ptr<SVM> svm, String directorio, vector<int>* res, 
         resize(img, img0, Size(64, 64), 0, 0, cv::INTER_AREA);
 
         cvtColor(img0, img1, COLOR_BGR2GRAY);
-        GaussianBlur(img1, img, Size(5, 5), 0);
-        img1 = img;
-        Mat sobelx, sobely, sobelxy;
-        //Sobel(img2, sobelx, CV_64F, 1, 0, 5);
-        //Sobel(img2, sobely, CV_64F, 0, 1, 5);
-        //Sobel(img0, sobelxy, CV_64F, 1, 1, 5);
-        //img2 = sobelxy; //probar sobely y sobelxy
+        //GaussianBlur(img1, img, Size(5, 5), 0);
+        //img1 = img;
         
-        //GaussianBlur(imgClas, imgClas, Size(3, 3), 0);
         vector< float > descriptors;
         img1.convertTo(img2, CV_8UC3);
         hog.compute(img2, descriptors, Size(0, 0), Size(0, 0));
 
+        //Mat val;
         float result = svm->predict(descriptors);
+        //float result = svm->predict(descriptors,val);
 
-        if (result > max) {
-            max = result;
-        }
-        if (result < min) {
-            min = result;
-        }
-        //int c = floor((result * 100 + 100) / 5);
         if (result < 0) {
-            //c = 0;
             cont[0] = cont[0] + 1;
         }
         else {
             if (result > 0) {
-                //c = 39;
                 cont[1] = cont[1] + 1;
             }
         }
-        //cont[c] = cont[c] + 1;
     }
     *res = cont;
-    std::cout << "\nval min: " << min;
-    std::cout << "\nval max: " << max;
 }
 
 void test_trained_two_detectorIm(Ptr<SVM> svm1,Ptr<SVM> svm2, String directorio, vector<int>* res, int* total) //Falta considerar cortar
 {
     std::vector<int> cont(2, 0);
-    double max = -1;
-    double min = 1;
-    int limI;
-    int limS;
     Mat img0, img1, img2;
     vector< String > files;
 
@@ -217,79 +179,193 @@ void test_trained_two_detectorIm(Ptr<SVM> svm1,Ptr<SVM> svm2, String directorio,
     {
         Mat img = imread(files[i]); // load the image
 
-        HOGDescriptor hog;
-        hog.winSize = Size(64, 64);
-        hog.blockSize = Size(16, 16);
-        hog.cellSize = Size(4, 4);
-        hog.blockStride = Size(4, 4);
-        hog.nbins = 9;
-        hog.derivAperture = 1;
-        hog.winSigma = 4;
-        //hog.histogramNormType = 0;
-        hog.L2HysThreshold = 2.0000000000000001e-01;
-        hog.gammaCorrection = 1;
-        hog.nlevels = 64;
-        hog.signedGradient = 0;
-
-
         resize(img, img0, Size(64, 64), 0, 0, cv::INTER_AREA);
         cvtColor(img0, img1, COLOR_BGR2GRAY);
-        GaussianBlur(img1, img, Size(5, 5), 0);
-        img1 = img;
-        Mat sobelx, sobely, sobelxy;
-        //Sobel(img2, sobelx, CV_64F, 1, 0, 5);
-        //Sobel(img2, sobely, CV_64F, 0, 1, 5);
-        //Sobel(img0, sobelxy, CV_64F, 1, 1, 5);
-        //img2 = sobelxy; //probar sobely y sobelxy
-
-        //GaussianBlur(imgClas, imgClas, Size(3, 3), 0);
+        //GaussianBlur(img1, img, Size(5, 5), 0);
+        //img1 = img;
+        
         vector< float > descriptors;
         img1.convertTo(img2, CV_8UC3);
         hog.compute(img2, descriptors, Size(0, 0), Size(0, 0));
 
-        float result1 = svm1->predict(descriptors);
+        float result = svm1->predict(descriptors);
         float result2 = svm2->predict(descriptors);
-        float result = result1 * result2;
-        //if (result < 0) {
-        //    result = svm2->predict(descriptors);
-        //}
-
-        if (result > max) {
-            max = result;
-        }
-        if (result < min) {
-            min = result;
-        }
-        //int c = floor((result * 100 + 100) / 5);
+        
+        //Test OR AND
+        //float result = result * result2;
         if (result < 0) {
-            //c = 0;
+            result = result2;
+        }
+        
+        //count
+        if (result < 0) {
             cont[0] = cont[0] + 1;
         }
         else {
             if (result > 0) {
-                //c = 39;
                 cont[1] = cont[1] + 1;
             }
         }
-        //cont[c] = cont[c] + 1;
     }
     *res = cont;
-    std::cout << "\nval min: " << min;
-    std::cout << "\nval max: " << max;
+}
+
+void testCascade(CascadeClassifier carC, String directorio, int* total, int* totalPos)
+{
+    int res = 0;
+    Mat img0, img1, img2;
+    vector< String > files;
+
+    glob(directorio, files);
+
+    *total = files.size();
+    vector< Rect > detectionsCascada;
+
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        Mat img = imread(files[i]); // load the image
+
+        cvtColor(img, img1, COLOR_BGR2GRAY);
+        //GaussianBlur(img1, img2, Size(5, 5), 0);
+        img = img1;
+
+        int width = img.size().width;
+        int height = img.size().height;
+        vector< float > descriptors;
+
+        detectionsCascada.clear();
+        carC.detectMultiScale(img, detectionsCascada, 1.05, 4, 0, Size(width * 0.4, height * 0.4), Size(width, height));
+
+        if ((int(detectionsCascada.size() > 0))) {
+            res = res + 1;
+        }
+        *totalPos = res;
+    }
+}
+
+void testCascadeSVM(CascadeClassifier carC, Ptr<SVM> svm1, Ptr<SVM> svm2, String directorio, int* total, int* totalPos)
+{
+    int res = 0;
+    Mat img0, img1, img2;
+    vector< String > files;
+
+    glob(directorio, files);
+
+    *total = files.size();
+    vector< Rect > detectionsCascada;
+
+    for (size_t i = 0; i < files.size(); ++i)
+    {
+        Mat img = imread(files[i]); // load the image
+       
+        cvtColor(img, img1, COLOR_BGR2GRAY);
+        //GaussianBlur(img1, img2, Size(5, 5), 0);
+        img = img1;
+
+        int width = img.size().width;
+        int height = img.size().height;
+        vector< float > descriptors;
+        img1.convertTo(img2, CV_8UC3);
+        detectionsCascada.clear();
+        carC.detectMultiScale(img, detectionsCascada, 1.05, 0, 0, Size(width * 0.4, height * 0.4), Size(width, height));
+
+        if ((int(detectionsCascada.size() > 0))) {
+            img.convertTo(img2, CV_8UC3);
+            hog.compute(img2, descriptors, Size(0, 0), Size(0, 0));
+
+            float result1 = svm1->predict(descriptors);
+            float result;
+            if (result1 < 0) { //OR
+                result = svm2->predict(descriptors);
+            }
+            else {
+                result = result1;
+            }
+            if (result > 0) {
+                res = res + 1;
+            }
+        }
+        
+        *totalPos = res;
+    }
+}
+
+void computeConfussionMatrix(vector<int> res, vector<int> res2, int total1, int total2) {
+    std::cout << "\nRes Validacion: \n";
+    double fp, tp, fn, tn;
+
+    tn = double(res2[0]) / double(total2);
+    fp = (double(res2[1])) / double(total2);
+    fn = double(res[0]) / double(total1);
+    tp = double((res[1])) / double(total1);
+    std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
+}
+
+void trainSVM(Ptr< SVM > svmC, Ptr< SVM > svmL, Mat* train_dataC, Mat* train_dataL, vector< int >* labelsC, vector< int >* labelsL) {
+    svmC->setType(SVM::C_SVC);
+    svmC->setKernel(SVM::RBF);
+
+    svmC->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, (int)1e8, 1e-6));
+
+    svmL->setType(SVM::C_SVC);
+    svmL->setKernel(SVM::RBF);
+
+    svmL->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, (int)1e8, 1e-6));
+
+    cv::Mat1f weights(1, 2);
+    weights(0, 0) = 0.2;
+    weights(0, 1) = 0.8;
+
+    
+    svmC->setC(62.5);
+    svmL->setC(12.5);
+    svmC->setGamma(0.00225);
+    svmL->setGamma(0.00225);
+    svmC->setClassWeights(weights);
+    svmL->setClassWeights(weights);
+
+    clog << " maquina1\n";
+    svmC->train(ml::TrainData::create(*train_dataC, ml::ROW_SAMPLE, *labelsC));
+
+    clog << " maquina2 \n";
+    svmL->train(ml::TrainData::create(*train_dataL, ml::ROW_SAMPLE, *labelsL));
+}
+
+
+void autoTrainSVM(Ptr< SVM > svm, Mat* train_data, vector< int >* labels) {
+    svm->setType(SVM::C_SVC);
+    svm->setKernel(SVM::RBF);
+
+    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, (int)1e8, 1e-6));
+    
+    ParamGrid CvParamGrid_C(pow(2.0, -2), pow(2.0, 5), pow(2.0, 1));
+    ParamGrid CvParamGrid_gamma(pow(2.0, -5), pow(2.0, 3), pow(2.0, 1));
+    ParamGrid CvParamGrid_p(0.1, 1.0, 0);
+    ParamGrid CvParamGrid_nu(pow(2.0, -2), pow(2.0, 5), 0);
+    ParamGrid CvParamGrid_coeff(pow(2.0, -2), pow(2.0, 5), 0);
+    ParamGrid CvParamGrid_deg(pow(2.0, -2), pow(2.0, 5), 0);
+
+    svm->trainAuto(ml::TrainData::create(*train_data, ml::ROW_SAMPLE, *labels), 10, svm->getDefaultGrid(SVM::C), svm->getDefaultGrid(SVM::GAMMA), CvParamGrid_p, CvParamGrid_nu, CvParamGrid_coeff, CvParamGrid_deg, false);
 }
 
 
 int main(int argc, char** argv)
 {
-    String svmFile = "C:/Users/ifons/source/repos/detec2/detec2/my_svmB.yml";
-    String imgPos = "C:/Users/ifons/source/repos/validacion2/validacion2/E/Pos";
-    String imgPosC = "C:/Users/ifons/source/repos/validacion2/validacion2/E/PosC";
-    String imgPosL = "C:/Users/ifons/source/repos/validacion2/validacion2/E/PosL";
-    String imgNeg = "C:/Users/ifons/source/repos/validacion2/validacion2/E/Neg";
-    String testPos = "C:/Users/ifons/source/repos/validacion/positivas";
-    String testNeg = "C:/Users/ifons/source/repos/validacion/negativas";
+    //Modelos
+    String svmFile = "D:/ifons/source/repos/validacion2/validacion2/my_svmML4C.yml";
+    String svmFile2 = "D:/ifons/source/repos/validacion2/validacion2/my_svmML4L.yml";
+    String cascadaFile = "D:/ifons/source/repos/cascada/cascada/cascade.xml";
+    //Set entrenamiento
+    String imgPos = "D:/ifons/source/repos/validacion2/validacion2/E/Pos";
+    String imgPosC = "D:/ifons/source/repos/validacion2/validacion2/E/PosC";
+    String imgPosL = "D:/ifons/source/repos/validacion2/validacion2/E/PosL";
+    String imgNeg = "D:/ifons/source/repos/validacion2/validacion2/E/Neg";
+    //Set validacion
+    String testPos = "D:/ifons/source/repos/validacion/positivas";
+    String testNeg = "D:/ifons/source/repos/validacion/negativas";
 
     //printCudaDeviceInfo(0);
+    createHOGDescriptor();
 
     int m = 1;
 
@@ -302,90 +378,20 @@ int main(int argc, char** argv)
 
         vector<int> res, res2;
         int total1, total2;
-
+        
+        //Test positive images
         test_trained_detectorIm(svm, testPos, &res, &total1,3);
 
         std::cout << "\nset validacion Positivos: \n";
-        int val = -100;
-        int val2 = -95;
-        for (int i = 0; i < res.size(); i++) {
-            std::cout << "___" << val << " - " << val2 << ": " << res[i];
-            val = val2;
-            val2 = val2 + 5;
-        }
+        std::cout << res[1] << " de total " << total1 << " Valor positivo\n";
 
+        //Test negative images
         test_trained_detectorIm(svm, testNeg, &res2, &total2,3);
 
         std::cout << "\nset validacion Negativos: \n";
-        val = -100;
-        val2 = -95;
-        for (int i = 0; i < res2.size(); i++) {
-            std::cout << " ___" << val << " - " << val2 << ": " << res2[i];
-            val = val2;
-            val2 = val2 + 5;
-        }
+        std::cout << res2[1] << " de total " << total2 << " Valor positivo\n";
 
-        std::cout << "\nRes: \n";
-        double fp, tp, fn, tn;
-        int ac = 0;
-        int ac2 = 0;
-        //val = -100;
-        //val2 = -95;
-        //for (int i = 0; i < res.size(); i++) {
-        //    std::cout << "\n" << val << " - " << val2 << ": ";
-            //ac = ac + res[i];//Positivos
-            //ac2 = ac2 + res2[i];//Negativos
-        tn = double(res2[0]) / double(total2);
-        fp = (double(res2[1])) / double(total2);
-        fn = double(res[0]) / double(total1);
-        tp = double((res[1])) / double(total1);
-        std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-        val = val2;
-        val2 = val2 + 5;
-        //}
-
-        test_trained_detectorIm(svm, imgPos, &res, &total1,3);
-
-        std::cout << "\nset Positivos: \n";
-        val = -100;
-        val2 = -95;
-        for (int i = 0; i < res.size(); i++) {
-            std::cout << "___" << val << " - " << val2 << ": " << res[i];
-            val = val2;
-            val2 = val2 + 5;
-        }
-
-        test_trained_detectorIm(svm, imgNeg, &res2, &total2,3);
-
-        std::cout << "\nset Negativos: \n";
-        val = -100;
-        val2 = -95;
-        for (int i = 0; i < res2.size(); i++) {
-            std::cout << "___" << val << " - " << val2 << ": " << res2[i];
-            val = val2;
-            val2 = val2 + 5;
-        }
-
-        std::cout << "\nRes: \n";
-        fp, tp, fn, tn;
-        ac = 0;
-        ac2 = 0;
-        val = -100;
-        val2 = -95;
-        for (int i = 0; i < res.size(); i++) {
-            std::cout << "\n" << val << " - " << val2 << ": ";
-            ac = ac + res[i];//Positivos
-            ac2 = ac2 + res2[i];//Negativos
-            tn = double(ac2) / double(total2);
-            fp = (double(total2 - ac2)) / double(total2);
-            fn = double(ac) / double(total1);
-            tp = double((total1 - ac)) / double(total1);
-            std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-            val = val2;
-            val2 = val2 + 5;
-        }
-
-
+        computeConfussionMatrix(res,res2, total1,total2);
     }
     else {
         //Train and test svm
@@ -402,10 +408,6 @@ int main(int argc, char** argv)
             clog << "Negative images are being loaded...";
             load_images(imgNeg, neg_lst, gaussian, sobel,3);
 
-            //for (int i = 0; i < pos_lst.size(); i++) {
-            //    clog << "\n " <<pos_lst[i].ptr();
-            //}
-
             computeHOGs(pos_lst, gradient_lst);
 
             size_t positive_count = gradient_lst.size();
@@ -419,157 +421,36 @@ int main(int argc, char** argv)
             Mat train_data;
             convert_to_ml(gradient_lst, train_data);
 
-            //cout << "M = " << endl << " " << train_data << endl << endl;
-
-            //for (int i = 0; i < labels.size(); i++) {
-            //    clog << "\n" << labels[i];
-            //}
-
             Ptr< SVM > svm = SVM::create();
 
-            //double> C;
-            //C.insert(C.end(), { 0.001,0.01, 0.1, 1, 10, 100, 1000,10000,100000,1000000,10000000,100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000,1000000000000000,10000000000000000 });
-            //vector<double> p;
-            //p.insert(p.end(), { 0.001, 0.01,0.1,0.5,0.8});
+            autoTrainSVM(svm, &train_data, &labels);
 
-            //vector<double> gamma;
-            //gamma.insert(gamma.end(), { 0.000002, 0.00002, 0.0002, 0.002,0.02,0.2,2,20,200,2000 });
-
-
-            //if l is 0 for linear, 1-5 rbf with correspondant gamma values
-
-            svm->setType(SVM::C_SVC);
-            svm->setKernel(SVM::RBF);
-
-            svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, (int)1e8, 1e-6));
-
-            //cv::Mat1f weights(1, 2);
-            //weights(0, 0) = 2;
-            //weights(0, 1) = 8;
-            //svm->setClassWeights(weights);
-
-            ParamGrid CvParamGrid_C(pow(2.0, -2), pow(2.0, 5), pow(2.0, 1));
-            ParamGrid CvParamGrid_gamma(pow(2.0, -5), pow(2.0, 3), pow(2.0, 1));
-            ParamGrid CvParamGrid_p(0.1, 1.0, 0);
-            ParamGrid CvParamGrid_nu(pow(2.0, -2), pow(2.0, 5), 0);
-            ParamGrid CvParamGrid_coeff(pow(2.0, -2), pow(2.0, 5), 0);
-            ParamGrid CvParamGrid_deg(pow(2.0, -2), pow(2.0, 5), 0);
-
-            //C=.01
-            //gamma = 0.0015 o 0.0025
-
-            //  svm->setCoef0(1.0);
-            // svm->setDegree(3);
-            //svm->setNu(0.5);
-            //svm->setP(0.1); // for EPSILON_SVR, epsilon in loss function?
-
-            //ParamGrid CvParamGrid_C(0.01, 10000000000000000, 10);
-            //ParamGrid CvParamGrid_Gamma(0.001, 1000000, 10);
-
-            //svm->setDegree(.65);
-            //svm->train(ml::TrainData::create(train_data, ml::ROW_SAMPLE, labels));
-
-            //svm->trainAuto(ml::TrainData::create(train_data, ml::ROW_SAMPLE, labels));
-            //svm->getDefaultGrid(SVM::C)
-            svm->trainAuto(ml::TrainData::create(train_data, ml::ROW_SAMPLE, labels), 10, svm->getDefaultGrid(SVM::C), svm->getDefaultGrid(SVM::GAMMA), CvParamGrid_p, CvParamGrid_nu, CvParamGrid_coeff, CvParamGrid_deg, false);
-            //Cambiar tamanos de la imagen y recortes, volver a probar sobel
             Mat SV = svm->getSupportVectors();
             Mat USV = svm->getUncompressedSupportVectors();
 
             std::cout << "\nSupport Vectors: " << SV.rows << endl;
             std::cout << "\nUncompressed Support Vectors: " << USV.rows << endl;
 
-
             std::cout << "\nParameters C: " << svm->getC() << " gamma: " << svm->getGamma() << " Type: " << svm->getType() << " Kernel: " << svm->getKernelType() << "Term: " << svm->getTermCriteria().epsilon << " maxCount" << svm->getTermCriteria().maxCount << " pesos: " << svm->getClassWeights() << " count" << svm->getTermCriteria().COUNT << " eps: " << svm->getTermCriteria().EPS;
 
             vector<int> res, res2;
             int total1, total2;
 
+            //Test positive images
             test_trained_detectorIm(svm, testPos, &res, &total1,3);
 
             std::cout << "\nset validacion Positivos: \n";
-            int val = -100;
-            int val2 = -95;
-            for (int i = 0; i < res.size(); i++) {
-                //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                val = val2;
-                val2 = val2 + 5;
-            }
+            std::cout << res[1] << " de total " << total1 << " Valor positivo\n"; //res[1] are correctly classified, ros[0] incorrect
 
+            //Test negative images
             test_trained_detectorIm(svm, testNeg, &res2, &total2,3);
+    
+            std::cout << "\nset validacion Negativos: \n";
+            std::cout << res2[1] << " de total " << total2 << " Valor positivo\n";
+    
+            computeConfussionMatrix(res,res2, total1,total2);
 
-            //std::cout << "\nset validacion Negativos: \n";
-            val = -100;
-            val2 = -95;
-            for (int i = 0; i < res2.size(); i++) {
-                //std::cout << " ___" << val << " - " << val2 << ": " << res2[i];
-                val = val2;
-                val2 = val2 + 5;
-            }
-
-            std::cout << "\nRes Validacion: \n";
-            double fp, tp, fn, tn;
-            int ac = 0;
-            int ac2 = 0;
-            //val = -100;
-            //val2 = -95;
-            //for (int i = 0; i < res.size(); i++) {
-                //std::cout << "\n" << val << " - " << val2 << ": ";
-                //ac = ac + res[i];//Positivos
-                //ac2 = ac2 + res2[i];//Negativos
-            tn = double(res2[0]) / double(total2);
-            fp = (double(res2[1])) / double(total2);
-            fn = double(res[0]) / double(total1);
-            tp = double((res[1])) / double(total1);
-            std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-            val = val2;
-            val2 = val2 + 5;
-            //}
-
-            test_trained_detectorIm(svm, imgPos, &res, &total1,3);
-
-            //std::cout << "\nset Positivos: \n";
-            val = -100;
-            val2 = -95;
-            for (int i = 0; i < res.size(); i++) {
-                //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                val = val2;
-                val2 = val2 + 5;
-            }
-
-            test_trained_detectorIm(svm, imgNeg, &res2, &total2,3);
-
-            //std::cout << "\nset Negativos: \n";
-            val = -100;
-            val2 = -95;
-            for (int i = 0; i < res2.size(); i++) {
-                //std::cout << "___" << val << " - " << val2 << ": " << res2[i];
-                val = val2;
-                val2 = val2 + 5;
-            }
-
-            std::cout << "\nRes Entrenamiento: \n";
-            fp, tp, fn, tn;
-            ac = 0;
-            ac2 = 0;
-            val = -100;
-            val2 = -95;
-            for (int i = 0; i < res.size(); i++) {
-                std::cout << "\n" << val << " - " << val2 << ": ";
-                ac = ac + res[i];//Positivos
-                ac2 = ac2 + res2[i];//Negativos
-                tn = double(ac2) / double(total2);
-                fp = (double(total2 - ac2)) / double(total2);
-                fn = double(ac) / double(total1);
-                tp = double((total1 - ac)) / double(total1);
-                std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-                val = val2;
-                val2 = val2 + 5;
-            }
-
-
-            svm->save("my_svmML2.yml");
-
+            svm->save("my_svmML4.yml");
 
         }
         else {
@@ -589,14 +470,9 @@ int main(int argc, char** argv)
                 clog << "Negative images are being loaded...";
                 load_images(imgNeg, neg_lst, gaussian, sobel,3);
 
-                //for (int i = 0; i < pos_lst.size(); i++) {
-                //    clog << "\n " <<pos_lst[i].ptr();
-                //}
-
                 computeHOGs(pos_lstC, gradient_lstC);
 
                 computeHOGs(pos_lstL, gradient_lstL);
-
 
                 size_t positive_countC = gradient_lstC.size();
                 labelsC.assign(positive_countC, +1);
@@ -620,78 +496,10 @@ int main(int argc, char** argv)
                 
                 convert_to_ml(gradient_lstL, train_dataL);
 
-                //cout << "M = " << endl << " " << train_data << endl << endl;
-
-                //for (int i = 0; i < labels.size(); i++) {
-                //    clog << "\n" << labels[i];
-                //}
-
                 Ptr< SVM > svmC = SVM::create();
                 Ptr< SVM > svmL = SVM::create();
 
-
-                //double> C;
-                //C.insert(C.end(), { 0.001,0.01, 0.1, 1, 10, 100, 1000,10000,100000,1000000,10000000,100000000,1000000000,10000000000,100000000000,1000000000000,10000000000000,100000000000000,1000000000000000,10000000000000000 });
-                //vector<double> p;
-                //p.insert(p.end(), { 0.001, 0.01,0.1,0.5,0.8});
-
-                //vector<double> gamma;
-                //gamma.insert(gamma.end(), { 0.000002, 0.00002, 0.0002, 0.002,0.02,0.2,2,20,200,2000 });
-
-
-                //if l is 0 for linear, 1-5 rbf with correspondant gamma values
-
-                svmC->setType(SVM::C_SVC);
-                svmC->setKernel(SVM::RBF);
-
-                svmC->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, (int)1e8, 1e-6));
-
-                svmL->setType(SVM::C_SVC);
-                svmL->setKernel(SVM::RBF);
-
-                svmL->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, (int)1e8, 1e-6));
-
-                cv::Mat1f weights(1, 2);
-                weights(0, 0) = 0.2;
-                weights(0, 1) = 0.8;
-                /*
-                ParamGrid CvParamGrid_C(pow(2.0, -2), pow(2.0, 5), pow(2.0, 1));
-                ParamGrid CvParamGrid_gamma(pow(2.0, -5), pow(2.0, 3), pow(2.0, 1));
-                ParamGrid CvParamGrid_p(0.1, 1.0, 0);
-                ParamGrid CvParamGrid_nu(pow(2.0, -2), pow(2.0, 5), 0);
-                ParamGrid CvParamGrid_coeff(pow(2.0, -2), pow(2.0, 5), 0);
-                ParamGrid CvParamGrid_deg(pow(2.0, -2), pow(2.0, 5), 0);
-                */
-
-                //C=.01
-                //gamma = 0.0015 o 0.0025
-
-                svmC->setC(62.5);
-                svmL->setC(12.5);
-                svmC->setGamma(0.00225);
-                svmL->setGamma(0.00225);
-                svmC->setClassWeights(weights);
-                svmL->setClassWeights(weights);
-
-                // svm->setDegree(3);
-                //svm->setNu(0.5);
-                //svm->setP(0.1); // for EPSILON_SVR, epsilon in loss function?
-
-                //ParamGrid CvParamGrid_C(0.01, 10000000000000000, 10);
-                //ParamGrid CvParamGrid_Gamma(0.001, 1000000, 10);
-
-                //svm->setDegree(.65);
-                //svmC->train(ml::TrainData::create(train_dataC, ml::ROW_SAMPLE, labelsC));
-
-                //svm->trainAuto(ml::TrainData::create(train_data, ml::ROW_SAMPLE, labels));
-                //svm->getDefaultGrid(SVM::C)
-                clog << " maquina1\n";
-                //svmC->trainAuto(ml::TrainData::create(train_dataC, ml::ROW_SAMPLE, labelsC), 10, svmC->getDefaultGrid(SVM::C), svmC->getDefaultGrid(SVM::GAMMA), CvParamGrid_p, CvParamGrid_nu, CvParamGrid_coeff, CvParamGrid_deg, false);
-                svmC->train(ml::TrainData::create(train_dataC, ml::ROW_SAMPLE, labelsC));
-
-                clog << " maquina2 \n";
-                //svmL->trainAuto(ml::TrainData::create(train_dataL, ml::ROW_SAMPLE, labelsL), 10, svmL->getDefaultGrid(SVM::C), svmL->getDefaultGrid(SVM::GAMMA), CvParamGrid_p, CvParamGrid_nu, CvParamGrid_coeff, CvParamGrid_deg, false);
-                svmL->train(ml::TrainData::create(train_dataL, ml::ROW_SAMPLE, labelsL));
+                trainSVM(svmC, svmL, &train_dataC, &train_dataL, &labelsC, &labelsL);
 
                 //Cambiar tamanos de la imagen y recortes, volver a probar sobel
                 Mat SV = svmC->getSupportVectors();
@@ -699,6 +507,7 @@ int main(int argc, char** argv)
 
                 std::cout << "\nSupport Vectors: " << SV.rows << endl;
                 std::cout << "\nUncompressed Support Vectors: " << USV.rows << endl;
+
 
                 SV = svmL->getSupportVectors();
                 USV = svmL->getUncompressedSupportVectors();
@@ -717,215 +526,100 @@ int main(int argc, char** argv)
                 vector<int> res, res2;
                 int total1, total2;
 
-                test_trained_two_detectorIm(svmC,svmL, testPos, &res, &total1);
-                std::cout << "\nset validacion Positivos: \n";
-                int val = -100;
-                int val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-                test_trained_two_detectorIm(svmC, svmL,testNeg, &res2, &total2);
-
-                //std::cout << "\nset validacion Negativos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res2.size(); i++) {
-                    //std::cout << " ___" << val << " - " << val2 << ": " << res2[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-                std::cout << "\nRes Validacion: \n";
-                double fp, tp, fn, tn;
-                int ac = 0;
-                int ac2 = 0;
-                //val = -100;
-                //val2 = -95;
-                //for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "\n" << val << " - " << val2 << ": ";
-                    //ac = ac + res[i];//Positivos
-                    //ac2 = ac2 + res2[i];//Negativos
-                tn = double(res2[0]) / double(total2);
-                fp = (double(res2[1])) / double(total2);
-                fn = double(res[0]) / double(total1);
-                tp = double((res[1])) / double(total1);
-                std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-                val = val2;
-                val2 = val2 + 5;
-                //}
-
-
+                //Individual test
+                //Machine 1
+                //Test positive images
                 test_trained_detectorIm(svmC, testPos, &res, &total1,3);
 
                 std::cout << "\nset validacion Positivos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
+                std::cout << res[1] << " de total " << total1 << " Valor positivo\n";
 
+                //Test negative images
                 test_trained_detectorIm(svmC, testNeg, &res2, &total2,3);
+                std::cout << "\nValidacion maquina 1 \n";
 
-                //std::cout << "\nset validacion Negativos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res2.size(); i++) {
-                    //std::cout << " ___" << val << " - " << val2 << ": " << res2[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
+                std::cout << "\nset validacion Negativos: \n";
+                std::cout << res2[1] << " de total " << total2 << " Valor positivo\n";
 
-                std::cout << "\nRes Validacion: \n";
-                //double fp, tp, fn, tn;
-                ac = 0;
-                ac2 = 0;
-                //val = -100;
-                //val2 = -95;
-                //for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "\n" << val << " - " << val2 << ": ";
-                    //ac = ac + res[i];//Positivos
-                    //ac2 = ac2 + res2[i];//Negativos
-                tn = double(res2[0]) / double(total2);
-                fp = (double(res2[1])) / double(total2);
-                fn = double(res[0]) / double(total1);
-                tp = double((res[1])) / double(total1);
-                std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-                val = val2;
-                val2 = val2 + 5;
-                //}
+                computeConfussionMatrix(res,res2, total1,total2);
 
+                //Machine 2
+                //Test positive images
                 test_trained_detectorIm(svmL, testPos, &res, &total1,3);
+                std::cout << "\nValidacion maquina 2 \n";
 
                 std::cout << "\nset validacion Positivos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
+                std::cout << res[1] << " de total " << total1 << " Valor positivo\n";
+        
+                //Test negative images
                 test_trained_detectorIm(svmL, testNeg, &res2, &total2,3);
+        
+                std::cout << "\nset validacion Negativos: \n";
+                std::cout << res2[1] << " de total " << total2 << " Valor positivo\n";
+        
+                computeConfussionMatrix(res,res2, total1,total2);
 
-                //std::cout << "\nset validacion Negativos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res2.size(); i++) {
-                    //std::cout << " ___" << val << " - " << val2 << ": " << res2[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
+                //Combined test
 
-                std::cout << "\nRes Validacion: \n";
-                fp, tp, fn, tn;
-                ac = 0;
-                ac2 = 0;
-                //val = -100;
-                //val2 = -95;
-                //for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "\n" << val << " - " << val2 << ": ";
-                    //ac = ac + res[i];//Positivos
-                    //ac2 = ac2 + res2[i];//Negativos
-                tn = double(res2[0]) / double(total2);
-                fp = (double(res2[1])) / double(total2);
-                fn = double(res[0]) / double(total1);
-                tp = double((res[1])) / double(total1);
-                std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-                val = val2;
-                val2 = val2 + 5;
-                //}
+                test_trained_two_detectorIm(svmC, svmL,testPos, &res, &total1);
+                //Test positive images
+                std::cout << "\nValidacion en conjunto \n";
 
-                test_trained_detectorIm(svmC, imgPos, &res, &total1,3);
+                std::cout << "\nset validacion Positivos: \n";
+                std::cout << res[1] << " de total " << total1 << " Valor positivo\n";
 
-                //std::cout << "\nset Positivos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
+                //Test negative images
+                test_trained_two_detectorIm(svmC, svmL,testNeg, &res2, &total2);
 
-                test_trained_detectorIm(svmC, imgNeg, &res2, &total2,3);
+                std::cout << "\nset validacion Negativos: \n";
+                std::cout << res2[1] << " de total " << total2 << " Valor positivo\n";
 
-                //std::cout << "\nset Negativos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res2.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res2[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-                std::cout << "\nRes Entrenamiento: \n";
-                fp, tp, fn, tn;
-                ac = 0;
-                ac2 = 0;
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    std::cout << "\n" << val << " - " << val2 << ": ";
-                    ac = ac + res[i];//Positivos
-                    ac2 = ac2 + res2[i];//Negativos
-                    tn = double(ac2) / double(total2);
-                    fp = (double(total2 - ac2)) / double(total2);
-                    fn = double(ac) / double(total1);
-                    tp = double((total1 - ac)) / double(total1);
-                    std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-                test_trained_detectorIm(svmL, imgPos, &res, &total1,3);
-
-                //std::cout << "\nset Positivos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-                test_trained_detectorIm(svmL, imgNeg, &res2, &total2,3);
-
-                //std::cout << "\nset Negativos: \n";
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res2.size(); i++) {
-                    //std::cout << "___" << val << " - " << val2 << ": " << res2[i];
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-                std::cout << "\nRes Entrenamiento: \n";
-                fp, tp, fn, tn;
-                ac = 0;
-                ac2 = 0;
-                val = -100;
-                val2 = -95;
-                for (int i = 0; i < res.size(); i++) {
-                    std::cout << "\n" << val << " - " << val2 << ": ";
-                    ac = ac + res[i];//Positivos
-                    ac2 = ac2 + res2[i];//Negativos
-                    tn = double(ac2) / double(total2);
-                    fp = (double(total2 - ac2)) / double(total2);
-                    fn = double(ac) / double(total1);
-                    tp = double((total1 - ac)) / double(total1);
-                    std::cout << "\nTN: " << tn << " FP: " << fp << " FN: " << fn << " TP: " << tp;
-                    val = val2;
-                    val2 = val2 + 5;
-                }
-
-
-
-            }
+                computeConfussionMatrix(res,res2, total1,total2);
+             }
         }
+    }
+    if(m==4){
+        CascadeClassifier carC;
+        carC.load(cascadaFile);
+        int total1, total2, res, res2;
+        testCascade(carC, testPos, &total1 ,&res);
+        std::cout << "Pos" <<res<< " de " <<total1<<endl;
+        testCascade(carC, testNeg, &total2, &res2);
+        std::cout << "Neg" << res << " de " << total2 << endl;
+
+        vector<int> resC1,resC2;
+        resC1[0]=total1-res;
+        resC2[1]=res;
+
+        resC2[0]=total2-res2;
+        resC2[1]=res2;
+
+        computeConfussionMatrix(resC1,resC2, total1,total2);
+    }
+    if(m==5){
+        CascadeClassifier carC;
+        carC.load(cascadaFile);
+        int total1, res, total2, res2;
+        Ptr<SVM> svm;
+        svm = StatModel::load<SVM>(svmFile);
+        Ptr<SVM> svm2;
+        svm2 = StatModel::load<SVM>(svmFile2);
+        std::cout << "Inicio" << endl;
+
+        testCascadeSVM(carC, svm,svm2,testPos, &total1, &res);
+        std::cout << "Pos" << res << " de " << total1 << endl;
+        testCascadeSVM(carC, svm,svm2,testNeg, &total2, &res2);
+        std::cout << "Neg" << res << " de " << total2 << endl;
+
+        vector<int> resC1,resC2;
+        resC1[0]=total1-res;
+        resC2[1]=res;
+
+        resC2[0]=total2-res2;
+        resC2[1]=res2;
+
+        computeConfussionMatrix(resC1,resC2, total1,total2);
+
     }
     //visualizar resultados, HOGImage
     if (m == 3) {
@@ -933,40 +627,13 @@ int main(int argc, char** argv)
         //Mat image = imread("C:/Users/ifons/source/repos/validacion2/validacion2/E/PosL/255.png");
         Mat image = imread("C:/Users/ifons/source/repos/validacion2/validacion2/E/PosC/68.png");
 
-       // C:\Users\ifons\source\repos\validacion2\validacion2\E\PosL
-        //Mat image = imread("C:/Users/ifons/source/repos/kalman/kalman/validacion/positivas/img6.png");
-        //HOGDescriptor hogDesc(image.size(),
-        //    Size(20, 20),
-        //    Size(10, 10),
-        //    Size(10, 10),
-        //    9);
-        HOGDescriptor hog;
-        hog.winSize = Size(64, 64);
-        hog.blockSize = Size(16, 16); //(16,16)
-        hog.cellSize = Size(4, 4);
-        hog.blockStride = Size(4, 4);
-        hog.nbins = 9; //9 a 12
-        hog.derivAperture = 1;
-        hog.winSigma = 4;
-        //hog.histogramNormType = 0;
-        hog.L2HysThreshold = 2.0000000000000001e-01;
-        hog.gammaCorrection = 1;
-        hog.nlevels = 64;
-        hog.signedGradient = 0;
         vector< float > descriptors;
         
-        Mat img0, img1, imgF,img2,img3;
+        Mat img0, imgF;
         GaussianBlur(image, img0, Size(5, 5), 0);
 
-
-        //img0(Rect(6, 6, 52, 52)).copyTo(img1);
-        
-        //img0(Rect(16, 6, 48, 52)).copyTo(img1);
-        //resize(img1, img3, Size(64, 64), 0, 0, cv::INTER_AREA);
-        //cvtColor(img2, imgF, COLOR_BGR2GRAY);
         imgF = img0;
         hog.compute(imgF, descriptors, Size(0, 0), Size(0, 0));
-
 
         vector<float> desc;
         string name = "HOG window";
