@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!--debug config-->
+<launch>
+	<copy file="mapa2.net.xml"/>
+	<copy file="rutas2.rou.xml"/>
+	<copy file="walls.poly.xml"/>
+	<copy file="hello2.sumocfg" type="config"/>
+</launch>	

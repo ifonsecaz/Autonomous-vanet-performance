@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2023-06-16 00:26:23 by Eclipse SUMO netedit Version 1.11.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="/home/veins/src/sumo/docs/hello/mapa2.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="/home/veins/src/sumo/docs/hello/mapa2.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.min-radius.fix.railways value="false"/>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="5"/>
+        <junctions.limit-turn-speed value="5.5"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="false"/>
+    </pedestrian>
+
+    <netedit>
+        <additional-files value="/home/veins/src/sumo/docs/hello/walls.poly.xml"/>
+    </netedit>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <poly id="poly_0" type="building" color="red" fill="1" layer="0.00" shape="-503.833255,327.987552 -564.731412,-15.833290 -266.584187,-55.163349 -242.478667,297.538474 -503.833255,325.450129"/>
+    <poly id="poly_1" type="building" color="red" fill="1" layer="0.00" shape="646.778775,55.523669 529.344314,35.601752 419.249506,-23.115479 321.736962,-79.735666 300.766522,-114.336891 299.718000,-142.646985 320.688440,-177.248210 680.331479,-226.528743 646.778775,54.475147 646.778775,55.523669"/>
+    <poly id="poly_2" type="building" color="red" fill="1" layer="0.00" shape="-195.138497,286.797020 -200.905368,120.711139 -49.813351,103.410526 -56.733596,-92.663084 52.836951,-109.963697 139.340014,-79.975968 220.076206,-51.141614 301.965773,-16.540388 386.162088,39.974946 441.524048,95.336907 386.162088,296.024014 -195.302508,286.429520 -195.138497,286.797020"/>
+    <poly id="poly_3" type="building" color="red" fill="1" layer="0.00" shape="-674.198476,-36.885164 -574.545560,-45.550635 -467.093721,-66.347765 -214.928518,-133.071891 -214.928518,-143.470456 -674.198476,-83.678707 -674.198476,-37.751711 -674.198476,-36.885164"/>
+    <poly id="poly_4" type="building" color="red" fill="1" layer="0.00" shape="261.257083,-96.915051 273.627027,-173.087861 142.114996,-156.160570 261.257083,-96.915051"/>
+    <poly id="poly_5" type="building" color="red" fill="1" layer="0.00" shape="-674.139472,-6.109444 -586.768608,-14.703299 -565.283969,86.990657 -664.829461,101.313749 -674.139472,-6.109444"/>
+</additional>

@@ -1,0 +1,2 @@
+detec posA
+detec[] posSig

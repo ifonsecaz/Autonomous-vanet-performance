@@ -1,0 +1,16 @@
+Para agregarlo click derecho sobre la carpeta principal-> omnett-> NED source y seleccionar los proyectos
+
+PruebaAODV y PruebaAODV2 se colocan dentro de la carpeta inet/examples 
+
+OmnetWorkspace como nuevos proyectos en raíz, fuera de los paquetes
+Se debe agregar las dependencias a inet, veins y veins_inet
+
+hello dentro de src/sumo/docs
+
+veins_inet archivo con modificaciones a los mensajes y aplicaciones 
+Colocar en src/veins/subprojects/veins_inet/src
+Los archivos: VeinsInetSampleApplication.cc y VeinsInetSampleMessage_m.h
+
+VanetSumo2 se dentro del workspace de omnet
+
+Al final darle refresh a los proyectos
