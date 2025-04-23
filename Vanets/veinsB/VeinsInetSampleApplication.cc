@@ -307,5 +307,5 @@ void VeinsInetSampleApplication::processPacket(std::shared_ptr<inet::Packet> pk)
             EV_INFO << "reenvia: " << getParentModule()->getIndex()<< " num "<<renv[getParentModule()->getIndex()]<<endl;
             nodo[getParentModule()->getIndex()].push_back(payload->getRoadId());
             nodo[getParentModule()->getIndex()].push_back("NO");
-            
+        }
 }
