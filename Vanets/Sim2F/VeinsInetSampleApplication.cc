@@ -49,83 +49,14 @@ const char* msgr[9];
 
 int msgRec=0;
 double lastC=40.1; //41 40.5 40.2 sim3 32 sim2 21
+bool haveForwarded = false;
+vector<int> env(8,0);
+    
+vector<int> renv(8,0);
 
-int env0=0;
-int env1=0;
-int env2=0;
-int env3=0;
-int env4=0;
-int env5=0;
-int env6=0;
-int env7=0;
-int env8=0;
+vector<vector<std::string>> pastVal(10, vector<std::string>(6, ""));
 
-int renv0=0;
-int renv1=0;
-int renv2=0;
-int renv3=0;
-int renv4=0;
-int renv5=0;
-int renv6=0;
-int renv7=0;
-int renv8=0;
-
-const char* pastVal0="";
-const char* pastVal1="";
-const char* pastVal2="";
-const char* pastVal3="";
-const char* pastVal4="";
-const char* pastVal5="";
-const char* pastVal6="";
-const char* pastVal7="";
-const char* pastVal8="";
-const char* pastVal9="";
-const char* pastVal01="";
-const char* pastVal11="";
-const char* pastVal21="";
-const char* pastVal31="";
-const char* pastVal41="";
-const char* pastVal51="";
-const char* pastVal61="";
-const char* pastVal71="";
-const char* pastVal81="";
-const char* pastVal02="";
-const char* pastVal12="";
-const char* pastVal22="";
-const char* pastVal32="";
-const char* pastVal42="";
-const char* pastVal52="";
-const char* pastVal62="";
-const char* pastVal72="";
-const char* pastVal82="";
-const char* pastVal03="";
-const char* pastVal13="";
-const char* pastVal23="";
-const char* pastVal33="";
-const char* pastVal43="";
-const char* pastVal53="";
-const char* pastVal63="";
-const char* pastVal73="";
-const char* pastVal83="";
-
-const char* pastVal04="";
-const char* pastVal14="";
-const char* pastVal24="";
-const char* pastVal34="";
-const char* pastVal44="";
-const char* pastVal54="";
-const char* pastVal64="";
-const char* pastVal74="";
-const char* pastVal84="";
-const char* pastVal05="";
-const char* pastVal15="";
-const char* pastVal25="";
-const char* pastVal35="";
-const char* pastVal45="";
-const char* pastVal55="";
-const char* pastVal65="";
-const char* pastVal75="";
-const char* pastVal85="";
+vector<vector<const char *>> nodo(10,vector<const char *>);
 
 bool VeinsInetSampleApplication::startApplication()
 {
@@ -217,51 +148,10 @@ bool VeinsInetSampleApplication::startApplication()
                     auto packet = createPacket("detectionsUpdate");
                     packet->insertAtBack(payload);
                     sendPacket(std::move(packet));
-                    if(getParentModule()->getIndex()==0){
-                                           env0=env0+1;
-                                           EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env0;
 
-                                            }
-                                            if(getParentModule()->getIndex()==1){
-                                                env1=env1+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env1;
-
-                                               }
-                                            if(getParentModule()->getIndex()==2){
-                                                env2=env2+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env2;
-
-                                               }
-                                            if(getParentModule()->getIndex()==3){
-                                                env3=env3+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env3;
-
-                                               }
-                                            if(getParentModule()->getIndex()==4){
-                                                env4=env4+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env4;
-
-                                               }
-                                            if(getParentModule()->getIndex()==5){
-                                                env5=env5+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env5;
-
-                                               }
-                                            if(getParentModule()->getIndex()==6){
-                                                env6=env6+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env6;
-
-                                               }
-                                            if(getParentModule()->getIndex()==7){
-                                                env7=env7+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env7;
-
-                                               }
-                                            if(getParentModule()->getIndex()==8){
-                                                env8=env8+1;
-                                                EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env8;
-
-                                               }
+                    env[getParentModule()->getIndex()]=env[getParentModule()->getIndex()]+1;
+                    EV_INFO << "Envia1 " << getParentModule()->getIndex()<< " num "<<env[getParentModule()->getIndex()];
+                    
 
                     //EV_INFO << "Envia " << getParentModule()->getIndex()<< " num "<<cont3;
                     //cont3++;
@@ -338,12 +228,8 @@ void VeinsInetSampleApplication::processPacket(std::shared_ptr<inet::Packet> pk)
 
 
     //sim2
-    const char* aux=""; //buffer
-        const char* aux2="";
-        const char* aux3="";
-        const char* aux4="";
-        const char* aux5="";
-        const char* aux6="";
+    vector<std::string> aux(6, ""); //buffer
+
         int contR=1;
         //getParentModule()->getDisplayString().setTagArg("i", 1, "gray");
 
@@ -352,137 +238,13 @@ void VeinsInetSampleApplication::processPacket(std::shared_ptr<inet::Packet> pk)
         if(lastC+0.0<t2){
             lastC=lastC+0.1;//1 0.5 0.2
 
-            pastVal0="";
-            pastVal1="";
-            pastVal2="";
-            pastVal3="";
-            pastVal4="";
-            pastVal5="";
-            pastVal6="";
-            pastVal7="";
-            pastVal8="";
-            pastVal9="";
-            pastVal01="";
-            pastVal11="";
-            pastVal21="";
-            pastVal31="";
-            pastVal41="";
-            pastVal51="";
-            pastVal61="";
-            pastVal71="";
-            pastVal81="";
-            pastVal02="";
-            pastVal12="";
-            pastVal22="";
-            pastVal32="";
-            pastVal42="";
-            pastVal52="";
-            pastVal62="";
-            pastVal72="";
-            pastVal82="";
-            pastVal03="";
-                   pastVal13="";
-                   pastVal23="";
-                   pastVal33="";
-                   pastVal43="";
-                   pastVal53="";
-                   pastVal63="";
-                   pastVal73="";
-                   pastVal83="";
-           pastVal04="";
-           pastVal14="";
-           pastVal24="";
-           pastVal34="";
-           pastVal44="";
-           pastVal54="";
-           pastVal64="";
-           pastVal74="";
-           pastVal84="";
-           pastVal05="";
-                       pastVal15="";
-                       pastVal25="";
-                       pastVal35="";
-                       pastVal45="";
-                       pastVal55="";
-                       pastVal65="";
-                       pastVal75="";
-                       pastVal85="";
+            vector<vector<std::string>> pastVal(10, vector<std::string>(6, ""));
 
         }
 
-        if(getParentModule()->getIndex()==0){
-            aux=pastVal0;
-            aux2=pastVal01;
-            aux3=pastVal02;
-            aux4=pastVal03;
-            aux5=pastVal04;
-            aux6=pastVal05;
-
+        for(int i=0; i<6; i++){
+            aux.at(i)=pastVal.at(getParentModule()->getIndex()).at(i);
         }
-        if(getParentModule()->getIndex()==1){
-               aux=pastVal1;
-               aux2=pastVal11;
-               aux3=pastVal12;
-               aux4=pastVal13;
-               aux5=pastVal14;
-                           aux6=pastVal15;
-           }
-        if(getParentModule()->getIndex()==2){
-               aux=pastVal2;
-               aux2=pastVal21;
-               aux3=pastVal22;
-               aux4=pastVal23;
-               aux5=pastVal24;
-                           aux6=pastVal25;
-           }
-        if(getParentModule()->getIndex()==3){
-               aux=pastVal3;
-               aux2=pastVal31;
-               aux3=pastVal32;
-               aux4=pastVal33;
-               aux5=pastVal34;
-                           aux6=pastVal35;
-           }
-        if(getParentModule()->getIndex()==4){
-               aux=pastVal4;
-               aux2=pastVal41;
-               aux3=pastVal42;
-               aux4=pastVal43;
-               aux5=pastVal44;
-                           aux6=pastVal45;
-           }
-        if(getParentModule()->getIndex()==5){
-               aux=pastVal5;
-               aux2=pastVal51;
-               aux3=pastVal52;
-               aux4=pastVal53;
-               aux5=pastVal54;
-                           aux6=pastVal55;
-           }
-        if(getParentModule()->getIndex()==6){
-               aux=pastVal6;
-               aux2=pastVal61;
-               aux3=pastVal62;
-               aux4=pastVal63;
-               aux5=pastVal64;
-                           aux6=pastVal65;
-           }
-        if(getParentModule()->getIndex()==7){
-               aux=pastVal7;
-               aux2=pastVal71;
-               aux3=pastVal72;
-               aux4=pastVal73;
-               aux5=pastVal74;
-                           aux6=pastVal75;
-           }
-        if(getParentModule()->getIndex()==8){
-               aux=pastVal8;
-               aux2=pastVal81;
-               aux3=pastVal82;
-               aux4=pastVal83;
-               aux5=pastVal84;
-                           aux6=pastVal85;
-           }
 
         simtime_t a=simTime();
         EV_INFO << "Received packet1: " << payload<< " ruta "<<payload->getRoadId() << " vs "<< aux <<" vs " <<aux2<<" vs "<<aux3<<" tiempo "<<a<<" lastC "<<lastC<<endl;
@@ -492,45 +254,16 @@ void VeinsInetSampleApplication::processPacket(std::shared_ptr<inet::Packet> pk)
         getParentModule()->getDisplayString().setTagArg("i", 1, "green");
 
 
-        if (strcmp(payload->getRoadId(), aux) == 0){
-        //if (strcmp(payload->getChunkLength(), aux) == 0){
-            haveForwarded = true;
+        for(int i=0; i<6; i++){
+            if(strcmp(payload->getRoadId(), aux.at(i).c_str())==0){
+                haveForwarded = true;
+                break;
+            }
         }
         else{
-            if (strcmp(payload->getRoadId(), aux2) == 0){
-                //if (strcmp(payload->getChunkLength(), aux) == 0){
-                    haveForwarded = true;
-            }
-            else{
-                if (strcmp(payload->getRoadId(), aux3) == 0){
-                    //if (strcmp(payload->getChunkLength(), aux) == 0){
-                        haveForwarded = true;
-                    }
-                else{
-                    if (strcmp(payload->getRoadId(), aux4) == 0){
-                                    //if (strcmp(payload->getChunkLength(), aux) == 0){
-                                        haveForwarded = true;
-                                    }
-                                else{
-                                    if (strcmp(payload->getRoadId(), aux5) == 0){
-                                                                        //if (strcmp(payload->getChunkLength(), aux) == 0){
-                                                                            haveForwarded = true;
-                                    }
-                                    else{
-                                        if (strcmp(payload->getRoadId(), aux6) == 0){
-                                                                                                                //if (strcmp(payload->getChunkLength(), aux) == 0){
-                                                                                                                    haveForwarded = true;
-                                                                            }
-                                        else{
-                                            haveForwarded = false;
-
-                                        }
-                                    }
-                                }
-
-                }
-            }
+            haveForwarded = false;
         }
+                                
 
         //traciVehicle->changeRoute(payload->getRoadId(), 999.9);
 
@@ -545,122 +278,19 @@ void VeinsInetSampleApplication::processPacket(std::shared_ptr<inet::Packet> pk)
             //contR++;
             //haveForwarded = true;
             //msgr[getParentModule()->getIndex()]=payload->getRoadId();
-            if(getParentModule()->getIndex()==0){
-                renv0=renv0+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv0;
-                if(!haveForwarded){
-                    pastVal05=pastVal04;
-                    pastVal04=pastVal03;
-                    pastVal03=pastVal02;
-                    pastVal02=pastVal01;
-                    pastVal01=pastVal0;
-                    pastVal0=payload->getRoadId();
+            renv[getParentModule()->getIndex()]=renv[getParentModule()->getIndex()]+1;
+            EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv[getParentModule()->getIndex()];
+            if(!haveForwarded){
+                for(int i=5;i>0;i--){
+                    pastVal[getParentModule()->getIndex()][i]=pastVal[getParentModule()->getIndex()][i-1];
                 }
+                pastVal[getParentModule()->getIndex()][0]=payload->getRoadId();
+
             }
-            if(getParentModule()->getIndex()==1){
-                renv1=renv1+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv1;
-                if(!haveForwarded){
-                    pastVal15=pastVal14;
-                                        pastVal14=pastVal13;
-                                pastVal13=pastVal12;
-                                pastVal12=pastVal11;
-                                pastVal11=pastVal1;
-                                pastVal1=payload->getRoadId();
-                            }
-            }
-            if(getParentModule()->getIndex()==2){
-                renv2=renv2+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv2;
-                if(!haveForwarded){
-                    pastVal25=pastVal24;
-                                        pastVal24=pastVal23;
-                    pastVal23=pastVal22;
-
-                                pastVal22=pastVal21;
-                                pastVal21=pastVal2;
-                                pastVal2=payload->getRoadId();
-                            }
-               }
-            if(getParentModule()->getIndex()==3){
-                renv3=renv3+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv3;
-                if(!haveForwarded){
-                    pastVal35=pastVal34;
-                                        pastVal34=pastVal33;
-                    pastVal33=pastVal32;
-
-                                pastVal32=pastVal31;
-                                pastVal31=pastVal3;
-                                pastVal3=payload->getRoadId();
-                            }
-               }
-            if(getParentModule()->getIndex()==4){
-                renv4=renv4+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv4;
-                if(!haveForwarded){
-                    pastVal45=pastVal44;
-                                        pastVal44=pastVal43;
-                    pastVal43=pastVal42;
-
-                                pastVal42=pastVal41;
-                                pastVal41=pastVal4;
-                                pastVal4=payload->getRoadId();
-                            }
-               }
-            if(getParentModule()->getIndex()==5){
-                renv5=renv5+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv5;
-                if(!haveForwarded){
-                    pastVal55=pastVal54;
-                                        pastVal54=pastVal53;
-                    pastVal53=pastVal52;
-
-                    pastVal52=pastVal51;
-                                pastVal51=pastVal5;
-                                pastVal5=payload->getRoadId();
-                            }
-               }
-            if(getParentModule()->getIndex()==6){
-                renv6=renv6+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv6;
-                if(!haveForwarded){
-                    pastVal65=pastVal64;
-                                        pastVal64=pastVal63;
-                    pastVal63=pastVal62;
-
-                                pastVal62=pastVal61;
-                                pastVal61=pastVal6;
-                                pastVal6=payload->getRoadId();
-                            }
-               }
-            if(getParentModule()->getIndex()==7){
-                renv7=renv7+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv7;
-                if(!haveForwarded){
-                    pastVal75=pastVal74;
-                                        pastVal74=pastVal73;
-                    pastVal73=pastVal72;
-
-                    pastVal72=pastVal71;
-                                pastVal71=pastVal7;
-                                pastVal7=payload->getRoadId();
-                            }
-               }
-            if(getParentModule()->getIndex()==8){
-                renv8=renv8+1;
-                EV_INFO << "reenvia2 " << getParentModule()->getIndex()<< " num "<<renv8;
-                if(!haveForwarded){
-                    pastVal85=pastVal84;
-                                        pastVal84=pastVal83;
-                    pastVal83=pastVal82;
-
-                    pastVal82=pastVal81;
-                                pastVal81=pastVal8;
-                                pastVal8=payload->getRoadId();
-                            }
-               }
+            
         }
+           
+        
 /*
 
 //sim3
